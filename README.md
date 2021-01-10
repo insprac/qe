@@ -34,7 +34,7 @@ import "github.com/insprac/qe"
 
 type ItemQueryParams struct {
   IDs   []uint32 `q:"ids" required:"true"`
-  Order string `q:"order"`
+  Order string   `q:"order"`
 }
 
 params = ItemQueryParams{[]uint32{3, 20, 43}, "id"}
