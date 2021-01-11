@@ -16,22 +16,25 @@ func Marshal(params interface{}) (string, error) {
 	for i := 0; i < val.NumField(); i++ {
 		tag := typ.Field(i).Tag
 		name, ok := tag.Lookup("q")
+		value := val.Field(i).Interface()
 
 		if ok {
-			if val.Field(i).Interface() == nil {
-				if tag.Get("required") == "true" {
-					return "", newError("field '%s' is required", typ.Field(i).Name)
+			if tag.Get("required") == "true" {
+				if value == nil || (val.Field(i).Kind() == reflect.Slice && fmt.Sprintf("%v", value) == "[]") {
+					return "", newError("field '%s' is required, but the slice is empty", typ.Field(i).Name)
+				} else if value == nil {
+					return "", newError("field '%s' is required, but the value is nil", typ.Field(i).Name)
 				}
-			} else {
-				encoded, err := encodeValue(typ.Field(i).Type, val.Field(i).Interface())
-
-				if err != nil {
-					return "", err
-				}
-
-				escaped := url.QueryEscape(fmt.Sprintf("%v", encoded))
-				pairs = append(pairs, name+"="+escaped)
 			}
+
+			encoded, err := encodeValue(typ.Field(i).Type, value)
+
+			if err != nil {
+				return "", err
+			}
+
+			escaped := url.QueryEscape(fmt.Sprintf("%v", encoded))
+			pairs = append(pairs, name+"="+escaped)
 		}
 	}
 
@@ -51,10 +54,19 @@ func encodeValue(typ reflect.Type, value interface{}) (string, error) {
 	case []string:
 		return strings.Join(v, ","), nil
 	case []bool, []int, []int8, []int16, []int32, []int64, []uint, []uint8, []uint16, []uint32, []uint64, []float32, []float64, []complex64, []complex128:
-		j := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(v)), ","), "[]")
-		return j, nil
+		joined := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(v)), ","), "[]")
+		return joined, nil
 	default:
 		return "", newError("unable to encode type '%v'", typ)
+	}
+}
+
+func isSupportedSlice(value interface{}) bool {
+	switch value.(type) {
+	case []bool, []int, []int8, []int16, []int32, []int64, []uint, []uint8, []uint16, []uint32, []uint64, []float32, []float64, []complex64, []complex128:
+		return true
+	default:
+		return false
 	}
 }
 

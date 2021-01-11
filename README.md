@@ -23,7 +23,7 @@ type SearchParams struct {
 
 params = SearchParams{"some search term", "name", 10, 1}
 
-queryString = qe.Marshal(params)
+queryString, err = qe.Marshal(params)
 // term=some+search+term&order=name&page_limit=10&page=1
 ```
 
@@ -39,6 +39,6 @@ type ItemQueryParams struct {
 
 params = ItemQueryParams{[]uint32{3, 20, 43}, "id"}
 
-queryString = qe.Marshal(params)
+queryString, err = qe.Marshal(params)
 // ids=3%2C20%2C43&order=id
 ```
