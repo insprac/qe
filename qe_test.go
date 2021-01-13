@@ -57,6 +57,12 @@ func TestMarshal(t *testing.T) {
 		"list=a%2Cb%2Cc": struct {
 			List []string `q:"list"`
 		}{[]string{"a", "b", "c"}},
+
+		"": struct {
+			String string   `q:"ignored"`
+			Int    uint8    `q:"int"`
+			Empty  []string `q:"empty"`
+		}{"", 0, []string{}},
 	}
 
 	for expected, data := range tests {

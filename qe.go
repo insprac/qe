@@ -20,21 +20,25 @@ func Marshal(params interface{}) (string, error) {
 
 		if ok {
 			if tag.Get("required") == "true" {
-				if value == nil || (val.Field(i).Kind() == reflect.Slice && fmt.Sprintf("%v", value) == "[]") {
+				if value == nil || value == "" || value == 0 || val.Field(i).Kind() == reflect.Slice && fmt.Sprintf("%v", value) == "[]" {
 					return "", newError("field '%s' is required, but the slice is empty", typ.Field(i).Name)
 				} else if value == nil {
 					return "", newError("field '%s' is required, but the value is nil", typ.Field(i).Name)
 				}
 			}
 
-			encoded, err := encodeValue(typ.Field(i).Type, value)
+			if value != nil && value != "" && (val.Field(i).Kind() == reflect.String || fmt.Sprint(value) != "0") {
+				encoded, err := encodeValue(typ.Field(i).Type, value)
 
-			if err != nil {
-				return "", err
+				if err != nil {
+					return "", err
+				}
+
+				if encoded != "" {
+					escaped := url.QueryEscape(fmt.Sprintf("%v", encoded))
+					pairs = append(pairs, name+"="+escaped)
+				}
 			}
-
-			escaped := url.QueryEscape(fmt.Sprintf("%v", encoded))
-			pairs = append(pairs, name+"="+escaped)
 		}
 	}
 
